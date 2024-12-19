@@ -14,38 +14,42 @@ import java.util.Arrays;
 @Component
 public class LoggingAspect {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Pointcut("execution(public * com.rajith.accordtest.*.*(..))")
-    private void publicMethodsFromLoggingPackage() {
+    @Pointcut("execution( * com.rajith.accordtest..*(..))")
+    private void applicationMethods() {
     }
 
-    @Before(value = "publicMethodsFromLoggingPackage()")
+    @Before(value = "applicationMethods()")
     public void logBefore(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         String methodName = joinPoint.getSignature().getName();
-        logger.debug(">> {}() - {}", methodName, Arrays.toString(args));
+        logger.info("Entering method: {}", methodName);
+        for(Object arg : args){
+            logger.info("-- Request Arguments : {} --",args);
+        }
+        //logger.debug(">> {}() - {}", methodName, Arrays.toString(args));
     }
 
-    @AfterReturning(value = "publicMethodsFromLoggingPackage()", returning = "result")
+    @AfterReturning(pointcut = "applicationMethods()", returning = "result")
     public void logAfter(JoinPoint joinPoint, Object result) {
         String methodName = joinPoint.getSignature().getName();
-        logger.debug("<< {}() - {}", methodName, result);
+        logger.info("Response : {} - {}", methodName, result);
     }
 
-    @AfterThrowing(pointcut = "publicMethodsFromLoggingPackage()", throwing = "exception")
+    @AfterThrowing(pointcut = "applicationMethods()", throwing = "exception")
     public void logException(JoinPoint joinPoint, Throwable exception) {
         String methodName = joinPoint.getSignature().getName();
         logger.error("<< {}() - {}", methodName, exception.getMessage());
     }
 
-    @Around(value = "publicMethodsFromLoggingPackage()")
+    @Around(value = "applicationMethods()")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         String methodName = joinPoint.getSignature().getName();
-        logger.debug(">> {}() - {}", methodName, Arrays.toString(args));
+     //   logger.debug(">> {}() - {}", methodName, Arrays.toString(args));
         Object result = joinPoint.proceed();
-        logger.debug("<< {}() - {}", methodName, result);
+       // logger.debug("<< {}() - {}", methodName, result);
         return result;
     }
 }
